@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notifications with Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+</head>
+<body>
+    <h1>Push Notifications with Firebase</h1>
+    <button onclick="subscribeUser()">Enable Notifications</button>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+      apiKey: "AIzaSyBExIspEZshgg9Om8d0erMMbXPHLnzKB24",
+  authDomain: "hhhhhh-91f37.firebaseapp.com",
+  databaseURL: "https://hhhhhh-91f37-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "hhhhhh-91f37",
+  storageBucket: "hhhhhh-91f37.firebasestorage.app",
+  messagingSenderId: "846154356130",
+  appId: "1:846154356130:web:b42b27414d287ab06c8efb",
+  measurementId: "G-1PEWLNQZLJ"
+};
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg))
+            .catch(err => console.error('Service Worker error:', err));
+        }
+        
+        async function subscribeUser() {
+            const registration = await navigator.serviceWorker.ready;
+            
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log('Permission denied');
+                return;
+            }
+            
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'BHrNFOrZhDqCo7IaHikSRjC_BLbD8eO196IH6jJSyGWoTyCVuc4Jk_rF1ftsJvVQYXBwypN6aqIyCR5MhcHVxgM'
+            });
+            
+            console.log('Subscription:', subscription);
+            database.ref('subscriptions').push(subscription);
+        }
+
+      self.addEventListener('push', function(event) {
+    const data = event.data ? event.data.json() : { title: 'Notification', body: 'You have a new message!' };
+    
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: '/icon.png', // Change this to your own icon file
+            badge: '/badge.png', // Optional small icon for notification
+        })
+    );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('/') // Redirect user to your site when clicking notification
+    );
+});
+
+    </script>
+</body>
+</html>
